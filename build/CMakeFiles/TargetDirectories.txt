@@ -1,0 +1,3 @@
+/home/rakvihaan/GUI/build/CMakeFiles/GUI.dir
+/home/rakvihaan/GUI/build/CMakeFiles/edit_cache.dir
+/home/rakvihaan/GUI/build/CMakeFiles/rebuild_cache.dir

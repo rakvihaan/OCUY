@@ -1,0 +1,43 @@
+---
+- Pose:
+    tag: Pose1
+    feature_size: 2
+    attribute_size: 0
+    features:
+      - Point:
+          tag: Point1
+          feature_size: 0
+          attribute_size: 3
+          features: null
+          attributes:
+            - coordinate:
+                label: x
+                unit: mm
+                datum: 7.8
+            - coordinate:
+                label: y
+                unit: mm
+                datum: 1.0
+            - coordinate:
+                label: z
+                unit: mm
+                datum: 8.5
+      - Orientation:
+          tag: Orientation1
+          feature_size: 0
+          attribute_size: 3
+          features: null
+          attributes:
+            - angle:
+                label: alpha
+                unit: deg
+                datum: 3
+            - angle:
+                label: gamma
+                unit: deg
+                datum: 6
+            - angle:
+                label: beta
+                unit: deg
+                datum: 9
+    attributes: null

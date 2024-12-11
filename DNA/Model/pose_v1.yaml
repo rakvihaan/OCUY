@@ -1,0 +1,66 @@
+---
+#abstract attribute node
+attribute: &attribute
+    label: "attribute_label"
+    unit: null
+#abstract feature node
+feature: &feature
+    tag: "feature_tag"
+    feature_size: 0
+    attribute_size: 0 #since feature cannot have zero atr, should this be allowed?
+    features: null
+    attributes: 
+        - <<: *attribute
+
+#unit of each attri
+coordinate: &coordinate
+    <<: *attribute
+    unit: mm
+
+angle: &angle
+    <<: *attribute
+    unit: deg
+
+Pose: 
+    <<: *feature
+    tag: Pose1
+    feature_size: 2
+    attributes: null 
+    features:
+    - Point:
+        <<: *feature
+        tag: Point1
+        attribute_size: 3
+        attributes:
+        - coordinate: 
+            <<: *coordinate
+            label: "x"
+            datum: null
+        - coordinate:
+            <<: *coordinate
+            label: "y"
+            datum: null
+        - coordinate:
+            <<: *coordinate
+            label: "z"
+            datum: null
+        features: null
+
+    - Orientation:
+        <<: *feature
+        tag: Orientation1
+        attribute_size: 3
+        attributes:
+        - angle:
+            <<: *angle
+            label: "alpha"
+            datum: null
+        - angle:
+            <<: *angle
+            label: "gamma"
+            datum: null
+        - angle:
+            <<: *angle
+            label: "beta"
+            datum: null
+        features: null

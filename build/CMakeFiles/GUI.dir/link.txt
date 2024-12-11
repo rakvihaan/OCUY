@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/GUI.dir/pose_class.cpp.o -o GUI   -L/usr/local/lib  -Wl,-rpath,/usr/local/lib /usr/local/lib/libyaml-cpp.so.0.8.0 
