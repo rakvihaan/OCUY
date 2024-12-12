@@ -22,6 +22,24 @@
                 label: z
                 unit: mm
                 datum: 8.5
+      - Point:
+          tag: Point1
+          feature_size: 0
+          attribute_size: 3
+          features: null
+          attributes:
+            - coordinate:
+                label: x
+                unit: mm
+                datum: 7.8
+            - coordinate:
+                label: y
+                unit: mm
+                datum: 1.02323
+            - coordinate:
+                label: z
+                unit: mm
+                datum: 8.5  
       - Orientation:
           tag: Orientation1
           feature_size: 0
