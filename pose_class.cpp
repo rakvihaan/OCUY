@@ -3,8 +3,6 @@
 #include "pose_class.hpp"
 
 
-
-
 int main() {
     YAML::Node config = YAML::LoadFile("DNA/Model/pose.yaml");
     for (const auto& poseNode : config){

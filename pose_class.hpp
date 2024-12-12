@@ -29,9 +29,13 @@ namespace pose_model
             }
         }
 
-        virtual void display() const = 0; // debug func to print members
+        virtual void display() = 0; // debug func to print members
 
-        virtual string getVal(){}
+        // virtual void setGetterStringFormat(std::string format) = 0;
+        // virtual void setSetterStringFormat(std::string format) = 0;
+
+        virtual std::string getValueAsStr() = 0;
+        virtual void setValue(std::string value) = 0;
     };
     // feature abstract class
     class Feature
@@ -45,7 +49,7 @@ namespace pose_model
 
     public:
         Feature(std::string t, int attri_size, int feat_size) : tag(t), attribute_size(attri_size), feature_size(feat_size) {}
-        virtual void display() const = 0;
+        virtual void display() = 0;
 
         // functions to add attributes and children to their resp. vectors
         void addAttribute(std::unique_ptr<Attribute> attribute)
@@ -85,26 +89,56 @@ namespace pose_model
         }
     };
 
-// Initialize the static map
     std::unordered_map<std::string, FeatureCreator> FeatureFactory::creators;
+
+    using AttributeCreator = std::function<std::unique_ptr<Attribute>(const YAML::Node&)>;
+
+    class AttributeFactory {
+    private:
+        // Map to store feature type name to its creation function
+        // Defined as static to be accessible across all instances
+        static std::unordered_map<std::string, AttributeCreator> creators;
+
+    public:
+        template<typename T>
+        static void registerType(const std::string& typeName) {
+            creators[typeName] = [](const YAML::Node& node) {
+                return T::parse_yaml(node);
+            };
+        }
+
+        static std::unique_ptr<Attribute> createAttribute(const std::string& attributeType, const YAML::Node& node) {
+            auto it = creators.find(attributeType);
+            if (it != creators.end()) {
+                return it->second(node);
+            }
+            // Could throw an exception or log a warning here
+            return nullptr;
+        }
+    };
+
+    std::unordered_map<std::string, AttributeCreator> AttributeFactory::creators;
+
+
 
     class angle : public Attribute
     {
     protected:
         float datum;
         static std::string unit;
-        static std::string getStringFormat = "%.2f";
-        static std::string setStringFormat = "%f";
+        static std::string getStringFormat;
+        static std::string setStringFormat;
     public:
         angle(const YAML::Node &node, const std::string &unit_t, const float datum_t)
             : Attribute(node), datum(datum_t) { angle::unit = unit_t; }
 
-        static angle parse_yaml(const YAML::Node &node)
+        static std::unique_ptr<angle> parse_yaml(const YAML::Node &node)
         {
             std::string unit_t = "";
             float datum_t = 0.0f;
             // std::cout<<node;
-            angle angle(node, unit_t, datum_t);
+            // angle angle(node, unit_t, datum_t);
+            auto angle1 = std::make_unique<angle>(node, unit_t, datum_t);
 
             try
             {
@@ -112,42 +146,42 @@ namespace pose_model
                 {
                     if (node["unit"].IsDefined())
                     {
-                        angle.unit = node["unit"].as<std::string>();
+                        angle1->unit = node["unit"].as<std::string>();
                     }
                     if (node["datum"].IsDefined())
                     {
-                        angle.datum = node["datum"].as<float>();
+                        angle1->datum = node["datum"].as<float>();
                     }
                 }
-                return angle;
+                return angle1;
             }
             catch (const YAML::BadConversion &e)
             {
                 std::cout << "bad yaml" << "\n";
             }
             // handle proper exception of not having proper angle vals
-            return angle;
+            return angle1;
         }
 
-        static void setGetterStringFormat(std::string format){
-
+        static void setGetterStringFormat(std::string format)  {
+;
         }
 
-        static void setSetterStringFormat(std::string format){
+        static void setSetterStringFormat(std::string format)  {
             
         }
 
-        std::string getValueAsStr(){
+        std::string getValueAsStr() override {
             char buffer[64];
             snprintf(buffer, sizeof(buffer), getStringFormat.c_str(), datum);
             return std::string(buffer);
         }
 
-        void setValue(std::string value){
-            scanf(setStringFormat,datum);
+        void setValue(std::string value) override {
+            scanf(setStringFormat.c_str(),datum);
         }
 
-        void display() const override
+        void display() override
         {
             std::cout << "Label: " << label << "\n"
                       << "Unit: " << unit << "\n"
@@ -160,60 +194,62 @@ namespace pose_model
     protected:
         float datum;
         static std::string unit;
-        static std::string getStringFormat = "%.2f";
-        static std::string setStringFormat = "%f";
+        static std::string getStringFormat;
+        static std::string setStringFormat;
     public:
         coordinate(const YAML::Node &node, const std::string &unit_t, const float datum_t)
             : Attribute(node), datum(datum_t) { coordinate::unit = unit_t; }
 
-        static coordinate parse_yaml(const YAML::Node &node)
+        static std::unique_ptr<coordinate> parse_yaml(const YAML::Node &node)
         {
             std::string unit_t = "";
             float datum_t = 0.0f;
 
-            coordinate coordinate(node, unit_t, datum_t);
+            // coordinate coordinate(node, unit_t, datum_t);
+            auto coordinate1 = std::make_unique<coordinate>(node, unit_t, datum_t);
+            
             try
             {
                 if (node.IsDefined())
                 {
                     if (node["unit"].IsDefined())
                     {
-                        coordinate.unit = node["unit"].as<std::string>();
+                        coordinate1->unit = node["unit"].as<std::string>();
                     }
                     if (node["datum"].IsDefined())
                     {
-                        coordinate.datum = node["datum"].as<float>();
+                        coordinate1->datum = node["datum"].as<float>();
                     }
                 }
-                return coordinate;
+                return coordinate1;
             }
             catch (const YAML::BadConversion &e)
             {
                 std::cout << "coord bad yaml" << "\n";
             }
             // handle proper exception of not having proper angle vals
-            return coordinate;
+            return coordinate1;
         }
 
-        static void setGetterStringFormat(std::string format){
+        static void setGetterStringFormat(std::string format)  {
 
         }
 
-        static void setSetterStringFormat(std::string format){
+        static void setSetterStringFormat(std::string format)  {
             
         }
 
-        std::string getValueAsStr(){
+        std::string getValueAsStr() override {
             char buffer[64];
             snprintf(buffer, sizeof(buffer), getStringFormat.c_str(), datum);
             return std::string(buffer);
         }
 
-        void setValue(std::string value){
-            scanf(setStringFormat,datum);
+        void setValue(std::string value) override {
+            scanf(setStringFormat.c_str(),datum);
         }        
 
-        void display() const override
+        void display() override
         {
             std::cout << "Label: " << label << "\n"
                       << "Unit: " << unit << "\n"
@@ -227,7 +263,13 @@ namespace pose_model
         Point(const std::string &tag_t, const int attribute_size_t, const int feature_size_t)
             : Feature(tag_t, attribute_size_t, feature_size_t)
         {
-        } // feature setter should be called here
+            static bool registered = false;
+            if (!registered) {
+                AttributeFactory::registerType<coordinate>("coordinate");
+                // AttributeFactory::registerType<Orientation>("Orientation");
+                registered = true;
+            }
+        }
 
         static std::unique_ptr<Point> parse_yaml(const YAML::Node &node) // try to abstract it
         {
@@ -241,19 +283,32 @@ namespace pose_model
                     int attribute_size_t = node["attribute_size"].as<int>();
                     int feature_size_t = node["feature_size"].as<int>();
                     auto point = std::make_unique<Point>(tag_t, attribute_size_t, feature_size_t);
-                    if (node["attributes"].IsDefined())
-                    {
-                        // std::cout<<node["attributes"]<<"\n";
-                        for (const auto &attributeNode : node["attributes"])
-                        {
-                            const YAML::Node &pointNode = attributeNode["coordinate"]; // use keys to identify the attribute
-                            // std::cout<<pointNode<<"\n";
-                            auto coord = std::make_unique<coordinate>(coordinate::parse_yaml(pointNode));
-                            point->addAttribute(std::move(coord));
-                            // point->addAttribute(std::make_unique<coordinate>(coordinate::parse_yaml(pointNode)));
-                            // attr.push_back(std::move(coordinate::parse_yaml(pointNode)));
+
+                    if (node["attributes"].IsDefined()) {
+                        for (const auto& attributeNode : node["attributes"]) {
+                            for (const auto& attribute : attributeNode) { // goes through each feature and creates resp. obj
+                                std::string attributeType = attribute.first.as<std::string>(); //first -> key
+                                auto newAttribute = AttributeFactory::createAttribute(attributeType, attribute.second);
+                                if (newAttribute) {
+                                    point->addAttribute(std::move(newAttribute));
+                                }
+                            }
                         }
                     }
+
+                    // if (node["attributes"].IsDefined())
+                    // {
+                    //     // std::cout<<node["attributes"]<<"\n";
+                    //     for (const auto &attributeNode : node["attributes"])
+                    //     {
+                    //         const YAML::Node &pointNode = attributeNode["coordinate"]; // use keys to identify the attribute
+                    //         // std::cout<<pointNode<<"\n";
+                    //         auto coord = std::make_unique<coordinate>(coordinate::parse_yaml(pointNode));
+                    //         point->addAttribute(std::move(coord));
+                    //         // point->addAttribute(std::make_unique<coordinate>(coordinate::parse_yaml(pointNode)));
+                    //         // attr.push_back(std::move(coordinate::parse_yaml(pointNode)));
+                    //     }
+                    // }
                     if (node["features"].IsDefined())
                     {
                     }
@@ -267,7 +322,7 @@ namespace pose_model
             return nullptr;
         }
 
-        void display() const override
+        void display() override
         {
             std::cout << "Display Point: " << "\n\n";
             std::cout << "Tag: " << tag << "\n"
@@ -291,7 +346,14 @@ namespace pose_model
         // Orientation(const std::string &tag_t, const int attribute_size_t, const int feature_size_t, const std::vector<angle> &angles_t)
         // : Feature(tag_t, attribute_size_t, feature_size_t), angles(angles_t) {} // feature setter should be called here
         Orientation(const std::string &tag_t, int attribute_size_t, int feature_size_t)
-            : Feature(tag_t, attribute_size_t, feature_size_t) {}
+            : Feature(tag_t, attribute_size_t, feature_size_t) {
+            static bool registered = false;
+            if (!registered) {
+                AttributeFactory::registerType<angle>("angle");
+                // AttributeFactory::registerType<Orientation>("Orientation");
+                registered = true;
+            }
+            }
 
         static std::unique_ptr<Orientation> parse_yaml(const YAML::Node &node)
         {
@@ -307,17 +369,30 @@ namespace pose_model
 
                     auto orientation = std::make_unique<Orientation>(tag_t, attribute_size_t, feature_size_t);
 
-                    if (node["attributes"].IsDefined())
-                    {
-                        for (const auto &attributeNode : node["attributes"])
-                        {
-                            const YAML::Node &angleNode = attributeNode["angle"];
-                            // orientation->addAttribute(std::make_unique<angle>(angle::parse_yaml(angleNode)));
-                            auto ang = std::make_unique<angle>(angle::parse_yaml(angleNode));
-                            orientation->addAttribute(std::move(ang));
-                            // angles.push_back(angle::parse_yaml(angleNode));
+                    if (node["attributes"].IsDefined()) {
+                        for (const auto& attributeNode : node["attributes"]) {
+                            for (const auto& attribute : attributeNode) { // goes through each feature and creates resp. obj
+                                std::string attributeType = attribute.first.as<std::string>(); //first -> key
+                                auto newAttribute = AttributeFactory::createAttribute(attributeType, attribute.second);
+                                if (newAttribute) {
+                                    orientation->addAttribute(std::move(newAttribute));
+                                }
+                            }
                         }
                     }
+
+
+                    // if (node["attributes"].IsDefined())
+                    // {
+                    //     for (const auto &attributeNode : node["attributes"])
+                    //     {
+                    //         const YAML::Node &angleNode = attributeNode["angle"];
+                    //         // orientation->addAttribute(std::make_unique<angle>(angle::parse_yaml(angleNode)));
+                    //         auto ang = std::make_unique<angle>(angle::parse_yaml(angleNode));
+                    //         orientation->addAttribute(std::move(ang));
+                    //         // angles.push_back(angle::parse_yaml(angleNode));
+                    //     }
+                    // }
                     return orientation;
                     // return Orientation(tag_t, attribute_size_t, feature_size_t, angles);
                 }
@@ -329,7 +404,7 @@ namespace pose_model
             return nullptr;
         }
 
-        void display() const override
+        void display() override
         {
             std::cout << "Display Orientation: " << "\n\n";
             std::cout << "Tag: " << tag << "\n"
@@ -352,6 +427,8 @@ namespace pose_model
             : Feature(tag_t, attribute_size_t, feature_size_t) {
             static bool registered = false;
             if (!registered) {
+                AttributeFactory::registerType<angle>("angle");
+                AttributeFactory::registerType<coordinate>("coordinate");
                 FeatureFactory::registerType<Point>("Point");
                 FeatureFactory::registerType<Orientation>("Orientation");
                 registered = true;
@@ -368,17 +445,28 @@ namespace pose_model
             try
             {
                 if (node["features"].IsDefined()) {
-                for (const auto& featureNode : node["features"]) {
-                    for (const auto& feature : featureNode) {
-                        std::string featureType = feature.first.as<std::string>();
-                        auto newFeature = FeatureFactory::createFeature(featureType, feature.second);
-                        if (newFeature) {
-                            pose->addFeature(std::move(newFeature));
+                    for (const auto& featureNode : node["features"]) {
+                        for (const auto& feature : featureNode) { // goes through each feature and creates resp. obj
+                            std::string featureType = feature.first.as<std::string>(); //first -> key
+                            auto newFeature = FeatureFactory::createFeature(featureType, feature.second);
+                            if (newFeature) {
+                                pose->addFeature(std::move(newFeature));
+                            }
                         }
                     }
                 }
-            }
-            return pose;
+                if (node["attributes"].IsDefined()) {
+                    for (const auto& attributeNode : node["attributes"]) {
+                        for (const auto& attribute : attributeNode) { // goes through each feature and creates resp. obj
+                            std::string attributeType = attribute.first.as<std::string>(); //first -> key
+                            auto newAttribute = AttributeFactory::createAttribute(attributeType, attribute.second);
+                            if (newAttribute) {
+                                pose->addAttribute(std::move(newAttribute));
+                            }
+                        }
+                    }
+                }
+                return pose;
             }
             catch (const YAML::InvalidNode &e)
             {
@@ -387,7 +475,7 @@ namespace pose_model
             return nullptr;
         }
 
-        void display() const override
+        void display() override
         {
             std::cout << "Tag: " << tag << "\n"
                       << "Attribute size: " << attribute_size << "\n"
@@ -403,3 +491,9 @@ namespace pose_model
 }
 std::string pose_model::angle::unit;
 std::string pose_model::coordinate::unit;
+
+std::string pose_model::angle::getStringFormat = "%.2f";
+std::string pose_model::angle::setStringFormat = "%f";
+
+std::string pose_model::coordinate::getStringFormat = "%.2f";
+std::string pose_model::coordinate::setStringFormat = "%f";
